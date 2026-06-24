@@ -14,12 +14,9 @@ app.use(express.json());
 // Routes
 app.use('/api', routes);
 
-// Serve frontend static files
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
-
-// Catch-all to serve the React app
-app.use((req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+// Serve a simple status message for the root URL
+app.get('/', (req, res) => {
+    res.json({ status: 'ClearAudit API is running securely on Render!' });
 });
 
 // Simple Error Handler

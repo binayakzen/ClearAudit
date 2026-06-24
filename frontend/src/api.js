@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { supabase } from './supabase';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const apiInstance = axios.create({ baseURL: API_BASE });
 
