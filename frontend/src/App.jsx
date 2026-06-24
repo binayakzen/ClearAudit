@@ -110,6 +110,27 @@ const Login = () => {
             </button>
           </form>
         </div>
+
+        {/* Demo Credentials */}
+        <div className="mt-6 p-5 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-gray-200/50 dark:border-slate-800/50 rounded-2xl shadow-lg shadow-gray-200/20 dark:shadow-slate-900/20 transition-all hover:bg-white/80 dark:hover:bg-slate-900/80">
+          <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3 text-center">Demo Credentials</p>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
+              <span className="font-semibold text-gray-700 dark:text-gray-300">worker@clearaudit.inc</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-400">Pass:</span>
+                <span className="font-mono text-xs bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 px-2 py-1 rounded-md text-gray-600 dark:text-gray-300 font-bold">2</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between px-4 py-2.5 bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm">
+              <span className="font-semibold text-gray-700 dark:text-gray-300">chief@clearaudit.inc</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-gray-400">Pass:</span>
+                <span className="font-mono text-xs bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-600 px-2 py-1 rounded-md text-gray-600 dark:text-gray-300 font-bold">1</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

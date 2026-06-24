@@ -15,11 +15,11 @@ app.use(express.json());
 app.use('/api', routes);
 
 // Serve frontend static files
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 // Catch-all to serve the React app
 app.use((req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 // Simple Error Handler
