@@ -1,19 +1,19 @@
 const nodemailer = require('nodemailer');
 
-const sendRejectionEmail = async (job) => {
-    // If credentials are not provided, we will just log the email to console
-    const useRealSMTP = process.env.SMTP_USER && process.env.SMTP_PASS;
+const smtpUser = process.env.SMTP_USER || 'binayakrath1234@gmail.com';
+const smtpPass = process.env.SMTP_PASS || 'djvursqacbwlooxs';
 
+const sendRejectionEmail = async (job) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.SMTP_USER || 'dummy',
-            pass: process.env.SMTP_PASS || 'dummy'
+            user: smtpUser,
+            pass: smtpPass
         }
     });
 
     const mailOptions = {
-        from: process.env.SMTP_USER || '"ClearAudit System" <no-reply@clearaudit.inc>',
+        from: `"ClearAudit System" <${smtpUser}>`,
         to: 'binayakrath1234@gmail.com',
         subject: `Audit Rejected: Action Required for Expense ${job.fileName}`,
         text: `Dear HR Manager,
@@ -39,31 +39,24 @@ ClearAudit System`,
     };
 
     try {
-        if (useRealSMTP) {
-            await transporter.sendMail(mailOptions);
-            console.log('Rejection email successfully sent to HR manager.');
-        } else {
-            console.log('SMTP credentials not found in .env. Skipping real email dispatch. Email content:');
-            console.log(mailOptions.text);
-        }
+        await transporter.sendMail(mailOptions);
+        console.log('Rejection email successfully sent to HR manager.');
     } catch (error) {
-        console.error('Failed to send rejection email:', error);
+        console.error('Failed to send rejection email:', error.message);
     }
 };
 
 const sendMonthlyReportEmail = async (pdfBuffer) => {
-    const useRealSMTP = process.env.SMTP_USER && process.env.SMTP_PASS;
-
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.SMTP_USER || 'dummy',
-            pass: process.env.SMTP_PASS || 'dummy'
+            user: smtpUser,
+            pass: smtpPass
         }
     });
 
     const mailOptions = {
-        from: process.env.SMTP_USER || '"ClearAudit System" <no-reply@clearaudit.inc>',
+        from: `"ClearAudit System" <${smtpUser}>`,
         to: 'binayakrath1234@gmail.com',
         subject: `Monthly Expense Report`,
         text: `Dear HR Manager,\n\nPlease find attached the requested monthly expense report.\n\nSincerely,\nClearAudit System`,
@@ -77,14 +70,10 @@ const sendMonthlyReportEmail = async (pdfBuffer) => {
     };
 
     try {
-        if (useRealSMTP) {
-            await transporter.sendMail(mailOptions);
-            console.log('Monthly report email successfully sent to HR manager.');
-        } else {
-            console.log('SMTP credentials not found in .env. Skipping real email dispatch. Email content attached with PDF buffer length:', pdfBuffer.length);
-        }
+        await transporter.sendMail(mailOptions);
+        console.log('Monthly report email successfully sent to HR manager.');
     } catch (error) {
-        console.error('Failed to send monthly report email:', error);
+        console.error('Failed to send monthly report email:', error.message);
     }
 };
 
