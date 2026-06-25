@@ -6,7 +6,7 @@
 
 ---
 
-## 🏛️ System Architecture & Multi-Agent Topology
+## 🏛️ Comprehensive System Architecture
 
 ![ClearAudit Complex Architecture](./docs/architecture.png)
 
@@ -55,7 +55,7 @@ Whenever an employee submits an expense—either via drag-and-drop receipt uploa
    * **Mechanics:** Verifies receipt document attachment presence and flags claims exceeding baseline company expense thresholds.
 4. **🚨 Fraud & Risk Analysis Agent (`Analyzing Risk`)**
    * **Function:** Evaluates behavioral anomaly indicators.
-   * **Mechanics:** Calculates fraud risk scores by detecting suspicious round numbers (e.g., exact $500.00 charges), category inflation anomalies (e.g., $500 for *Meals*), and abnormal submission velocity.
+   * **Mechanics:** Calculates fraud risk scores by detecting suspicious round numbers (e.g., exact $500.00 charges), category inflation anomalies (e.g., $500 for *Meals*), and abnormal submission velocity. High risk items transition state to `Flagged`.
 
 ---
 
@@ -72,7 +72,7 @@ ClearAudit features role-based access control (RBAC) delivering tailored user ex
 
 ### 👑 2. Chief Executive CFO Dashboard (`role === 'chief'`)
 * **Demo Access:** `chief@clearaudit.inc` | **Pass:** `1`
-* **Accounting Separation Logic (Version 2.0):**
+* **Version 2.0 Accounting Separation Logic:**
   * **Monthly Budget Arc Gauge (`$657 / $12,000`):** Aggregates gross submitted employee spending across all statuses (*Approved*, *Flagged*, *Rejected*, *Processing*) to give executives full visibility into company spending volume.
   * **Approved Amount Card (`$236.50`):** Strictly isolates and sums **only** cleared transactions with authorized *Approved* status.
 * **Fraud Audit Review:** Executives examine exact AI fraud reasoning, risk scores, and anomaly breakdowns on flagged transactions.
@@ -82,42 +82,42 @@ ClearAudit features role-based access control (RBAC) delivering tailored user ex
 
 ---
 
-## 📂 Complete File & Function Reference
+## 📂 Exhaustive File & Function Reference (Bit by Bit)
 
-### ⚙️ Backend Core (`/backend`)
-* **`server.js`**: Core Express server initialization, CORS configuration, Supabase authentication middleware, and REST route registration.
-* **`routes.js`**: Defines RESTful endpoints:
-  * `GET /api/dashboard/metrics`: Computes separated gross budget totals and cleared approval sums.
-  * `POST /api/expenses/upload`: Handles multipart receipt uploads with automatic Supabase storage bucket fallback creation.
-  * `POST /api/expenses/:id/reject`: Triggers job rejection state and dispatches HR Nodemailer notice.
-  * `POST /api/chat`: Handles conversational AI submissions, executive policy updates, and PDF report generation.
-* **`orchestrator.js`**: The multi-agent pipeline state machine. Manages sequential job progression through the 4 Gemini AI agents and updates PostgreSQL job states.
-* **`emailService.js`**: Nodemailer SMTP transport bridge. Configured with hardcoded fallback authentication credentials (`binayakrath1234@gmail.com`) to guarantee live server email delivery.
-* **`pdfGenerator.js`**: Lightweight, pure JavaScript `PDFKit` document generator creating single-page month-end financial summaries.
+### ⚙️ Backend API Engine (`/backend`)
+* **`server.js`**: Core Express initialization. Binds server port `3001`, mounts JSON body parsers, registers Vercel CORS origins, attaches Supabase session verification middleware, and mounts API routes.
+* **`routes.js`**: Defines all RESTful endpoints:
+  * `GET /api/dashboard/metrics`: Aggregates active jobs. Calculates separated gross budget totals (`totalAmountProcessed`) vs cleared authorized spending (`approvedAmount`).
+  * `POST /api/expenses/upload`: Multer multipart upload route executing `safeUploadToStorage` with auto bucket creation and DB record generation.
+  * `POST /api/expenses/:id/approve`: Chief triage endpoint updating state to `Approved`.
+  * `POST /api/expenses/:id/reject`: Chief triage endpoint updating state to `Rejected` and firing asynchronous Nodemailer notice.
+  * `POST /api/chat`: Conversational AI gateway handling natural submissions, CFO policy modifications, and 1-page PDF generation requests.
+* **`orchestrator.js`**: The multi-agent pipeline state machine. Manages sequential asynchronous job progression through the 4 Gemini AI agents (`callGemini`), updates PostgreSQL status columns, and manages budget/limit database reads/writes.
+* **`emailService.js`**: Nodemailer SMTP transport bridge. Hardcoded with permanent fallback authentication tokens (`binayakrath1234@gmail.com`) to guarantee email delivery across serverless cloud environments.
+* **`pdfGenerator.js`**: Lightweight pure JavaScript `PDFKit` engine rendering clean, single-page month-end financial reporting tables without heavy browser binaries.
 
-### 🎨 Frontend UI (`/frontend`)
-* **`src/App.jsx`**: Main application router handling SPA navigation between `/worker` and `/chief` dashboards.
-* **`src/api.js`**: Axios HTTP client layer with robust error catch blocks and Render live hosting fallback URLs.
-* **`src/supabase.js`**: Supabase client initialization.
-* **`src/components/Dashboards.jsx`**: Layout wrappers for Worker and Chief interfaces.
-* **`src/components/Shared.jsx`**: Contains reusable design system components:
-  * `AnalyticsOverview`: Renders top-level KPI metrics cards with Version 2.0 accounting fallback logic.
+### 🎨 Frontend React Client (`/frontend`)
+* **`src/App.jsx`**: Main application router managing Supabase authentication state and role-based routing between `/worker` and `/chief` dashboards.
+* **`src/api.js`**: Axios HTTP service layer configured with Render live cloud hosting fallback URLs (`clearaudit.onrender.com`) and explicit multipart boundaries.
+* **`src/supabase.js`**: Supabase authentication and storage client initialization.
+* **`src/components/Dashboards.jsx`**: Top-level layout wrappers for Worker and Chief interfaces.
+* **`src/components/Shared.jsx`**: Reusable design system library:
+  * `AnalyticsOverview`: Top row KPI indicator cards implementing Version 2.0 dynamic fallback accounting sums.
   * `BudgetMeter`: Animated SVG circular arc meter tracking monthly capacity percentage.
-  * `DataTable`: Company-wide transaction table with view, approve, and reject action handlers.
+  * `DataTable`: Company-wide transaction directory with view modal, receipt attachment upload, and 1-click Chief triage buttons.
 * **`src/components/CalendarSection.jsx`**: Interactive monthly grid calendar rendering dual green/amber expense badges.
+* **`vercel.json`**: Vercel SPA routing rewrite rules (`/(.*) -> /index.html`) eliminating 404 page refresh navigation errors.
 
 ---
 
 ## 🚀 Live Cloud Deployment
 
-* **🌐 Live Frontend (Vercel):** [clear-audit.vercel.app](https://clear-audit.vercel.app)
-  * Configured with `vercel.json` SPA rewrite rules (`/(.*) -> /index.html`) to prevent 404 refresh errors.
-* **☁️ Live Backend (Render):** [clearaudit.onrender.com](https://clearaudit.onrender.com)
-  * Serverless Node.js container hosting Express API, Gemini intelligence, and Nodemailer SMTP engine.
+* **🌐 Live Client (Vercel):** [https://clear-audit.vercel.app](https://clear-audit.vercel.app)
+* **☁️ Live Server (Render):** [https://clearaudit.onrender.com](https://clearaudit.onrender.com)
 
 ---
 
-## 💻 Local Development Setup
+## 💻 Running Locally
 
 ```bash
 # 1. Clone Repository
@@ -129,7 +129,7 @@ cd backend
 npm install
 npm run dev
 
-# 3. Start Frontend Client (In a new terminal)
+# 3. Start Frontend Client (In a new terminal tab)
 cd ../frontend
 npm install
 npm run dev
