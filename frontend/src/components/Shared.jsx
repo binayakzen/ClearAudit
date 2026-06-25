@@ -294,15 +294,25 @@ export const CalendarView = ({ allJobs }) => {
   const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const handleToday = () => setCurrentDate(new Date());
 
-  const dailyTotals = {};
+  const dailyApproved = {};
+  const dailyPending = {};
   
   (allJobs || []).forEach(job => {
-    if (job.status === 'Approved' && job.extractedData?.date && job.extractedData?.amount) {
-      const date = String(job.extractedData.date);
+    if (job.status !== 'Rejected' && job.extractedData?.date && job.extractedData?.amount) {
+      let rawDate = String(job.extractedData.date).trim();
+      const parts = rawDate.split(/[-/]/);
+      if (parts.length === 3 && parts[0].length === 4) {
+        rawDate = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+      }
+      
       const amountStr = String(job.extractedData.amount).replace(/[^0-9.-]+/g, "");
       const amt = parseFloat(amountStr);
-      if (!isNaN(amt)) {
-        dailyTotals[date] = (dailyTotals[date] || 0) + amt;
+      if (!isNaN(amt) && amt > 0) {
+        if (job.status === 'Approved') {
+          dailyApproved[rawDate] = (dailyApproved[rawDate] || 0) + amt;
+        } else {
+          dailyPending[rawDate] = (dailyPending[rawDate] || 0) + amt;
+        }
       }
     }
   });
@@ -343,8 +353,6 @@ export const CalendarView = ({ allJobs }) => {
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const formattedDate = `${new Date().getDate()} ${monthNames[new Date().getMonth()]} ${new Date().getFullYear()}`;
-
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm dark:shadow-slate-900/50 border border-gray-200 dark:border-slate-700 overflow-hidden">
       <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-900">
@@ -374,22 +382,35 @@ export const CalendarView = ({ allJobs }) => {
 
       <div className="grid grid-cols-7 auto-rows-fr">
         {allCalendarDays.map((calDay, i) => {
-          const spent = dailyTotals[calDay.dateStr];
+          const approvedAmt = dailyApproved[calDay.dateStr];
+          const pendingAmt = dailyPending[calDay.dateStr];
           const isToday = calDay.dateStr === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
 
           return (
-            <div key={`${calDay.dateStr}-${i}`} className={`min-h-[140px] p-3 border-r border-b border-gray-200 dark:border-slate-700 relative ${!calDay.isCurrentMonth ? 'bg-gray-50/50 dark:bg-slate-800/30' : 'bg-white dark:bg-slate-900'} ${i % 7 === 6 ? 'border-r-0' : ''}`}>
-               <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${isToday ? 'bg-blue-600 text-white shadow-sm dark:shadow-slate-900/50' : calDay.isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
-                 {calDay.dayNum}
-               </span>
-               {spent && (
-                 <div className="mt-2 p-2 bg-green-50 border border-green-100 rounded-lg shadow-sm dark:shadow-slate-900/50 group hover:bg-green-100 transition-colors cursor-pointer">
-                   <p className="text-sm font-bold text-green-700 flex items-center gap-1.5">
-                      <span className="text-green-600 text-xs">US$</span> 
-                      {spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                   </p>
-                 </div>
-               )}
+            <div key={`${calDay.dateStr}-${i}`} className={`min-h-[140px] p-3 border-r border-b border-gray-200 dark:border-slate-700 relative flex flex-col justify-between ${!calDay.isCurrentMonth ? 'bg-gray-50/50 dark:bg-slate-800/30' : 'bg-white dark:bg-slate-900'} ${i % 7 === 6 ? 'border-r-0' : ''}`}>
+               <div>
+                 <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${isToday ? 'bg-blue-600 text-white shadow-sm dark:shadow-slate-900/50' : calDay.isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}`}>
+                   {calDay.dayNum}
+                 </span>
+               </div>
+               <div className="space-y-1 mt-2">
+                 {approvedAmt > 0 && (
+                   <div className="p-1.5 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/60 rounded-md shadow-sm">
+                     <p className="text-xs font-bold text-green-700 dark:text-green-300 flex items-center justify-between">
+                        <span>Approved:</span>
+                        <span>${approvedAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                     </p>
+                   </div>
+                 )}
+                 {pendingAmt > 0 && (
+                   <div className="p-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-md shadow-sm">
+                     <p className="text-xs font-bold text-amber-700 dark:text-amber-300 flex items-center justify-between">
+                        <span>Pending/Flag:</span>
+                        <span>${pendingAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                     </p>
+                   </div>
+                 )}
+               </div>
             </div>
           );
         })}
