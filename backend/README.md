@@ -1,32 +1,98 @@
-# ClearAudit - Backend (Server) ⚙️
+# ClearAudit — Node.js Express Multi-Agent State Machine Backend ⚙️🤖
 
-The backend of ClearAudit is a robust Node.js and Express API. It is responsible for orchestrating the AI analysis pipeline, securely communicating with the Supabase database, and providing endpoints for the frontend.
+The **ClearAudit Backend** is an enterprise-grade **Node.js** and **Express.js** API server. It manages multi-agent pipeline orchestration, PostgreSQL state persistence, Supabase cloud storage bridges, Nodemailer email automations, and pure JavaScript PDF report compilation.
 
-## 🧠 AI Agent Pipeline
+---
 
-When an expense is submitted, the backend runs it through a series of intelligent AI Agents powered by the Google Gemini API:
+## 🏛️ Backend Architecture & Pipeline Event Loop
 
-1. **Extraction Agent**: Reads the chat text or receipt file and extracts the exact merchant name, transaction date, and numerical amount.
-2. **Categorization Agent**: Evaluates the merchant and automatically assigns the expense to a standard corporate accounting category (e.g., "Software", "Travel").
-3. **Policy Agent**: Checks the expense amount against the dynamic, company-wide expense limit stored in the database.
-4. **Risk Analysis Agent**: Acts as a forensic accountant to identify suspicious behavior. It looks for anomalies like unusually round numbers or massive meal expenses, generating a "Fraud Score". High scores automatically flag the transaction for Chief review.
+```
+                       +---------------------------------------+
+                       |           Express REST API            |
+                       |     (server.js & routes.js Routes)    |
+                       +-------------------+-------------------+
+                                           |
+                                           v
+                       +---------------------------------------+
+                       |        Auth Middleware (JWT)          |
+                       |      (Verifies Supabase Session)      |
+                       +-------------------+-------------------+
+                                           |
+                                           v
+                       +---------------------------------------+
+                       |         Orchestrator Engine           |
+                       |       (orchestrator.js State Mach.)   |
+                       +-------------------+-------------------+
+                                           |
+         +---------------------------------+---------------------------------+
+         |                                 |                                 |
+         v                                 v                                 v
++-----------------+               +-----------------+               +-----------------+
+| processJob()    |               | emailService.js |               | pdfGenerator.js |
+| 4 Gemini Agents |               | Nodemailer SMTP |               | PDFKit JS Eng.  |
++--------+--------+               +--------+--------+               +--------+--------+
+         |                                 |                                 |
+         +---------------------------------+---------------------------------+
+                                           |
+                                           v
+                       +---------------------------------------+
+                       |        Supabase Cloud Infrastructure  |
+                       |   [PostgreSQL DB] [Storage Buckets]   |
+                       +---------------------------------------+
+```
 
-## 🔒 Security & Integrations
-- **Supabase Auth Middleware**: All API routes are protected. The backend intercepts requests and verifies the user's Supabase JWT token before allowing access.
-- **File Handling**: Uses `multer` to accept `multipart/form-data` uploads, streaming PDFs and images directly to Supabase Storage buckets.
-- **Email Service**: Uses `nodemailer` to automatically send PDF expense reports and rejection notifications.
+---
 
-## ⚙️ Setup & Installation
+## 🤖 The 4 Autonomous Gemini AI Agents (`orchestrator.js`)
 
-1. Open your terminal and navigate to this folder: `cd server`
-2. Install dependencies: `npm install`
-3. Create a `.env` file in the `server` folder:
-   ```env
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_SERVICE_KEY=your_supabase_service_role_key
-   GEMINI_API_KEY=your_google_gemini_api_key
-   EMAIL_USER=your_nodemailer_email
-   EMAIL_PASS=your_nodemailer_password
-   ```
-4. Initialize your database: Ensure your Supabase instance has the required `expenses`, `company_settings`, and `employees` tables. You can use the `clearData.js` script to reset your database if needed.
-5. Start the server: `npm start` (Runs on port 3000)
+When an audit job is queued via `POST /api/expenses/upload` or `POST /api/chat`, `Orchestrator.processJob(jobId)` runs a sequential multi-agent pipeline:
+
+1. **📄 OCR Data Extraction Agent**
+   * **Prompt:** Parses input text or OCR file buffers.
+   * **Output:** Structured JSON `{ "amount": number, "date": "YYYY-MM-DD", "merchant": "string" }`.
+2. **🗂️ Ledger Categorization Agent**
+   * **Function:** Evaluates merchant context and assigns corporate accounting ledger buckets (*Travel & Transit*, *Meals*, *Software & Infrastructure*, etc.).
+3. **🛡️ Corporate Policy Checker Agent**
+   * **Function:** Validates receipt document attachment presence and compares dollar figures against active company limits.
+4. **🚨 Fraud & Risk Analysis Agent**
+   * **Function:** Forensic anomaly detection. Evaluates round number charges (e.g. exact $500.00), category price anomalies, and suspicious submission velocity to calculate a **Fraud Score**. High risk items transition state to `Flagged`.
+
+---
+
+## 📂 Core File & Function Directory
+
+* **`server.js`**: Initializes Express app, registers CORS middleware for Vercel origins, mounts JSON/urlencoded body parsers, and binds server port `3001`.
+* **`routes.js`**: RESTful API endpoints:
+  * `GET /api/dashboard/metrics`: Computes gross budget burn (`totalAmountProcessed`) vs cleared approval sum (`approvedAmount`).
+  * `POST /api/expenses/upload`: Multer multipart upload route executing `safeUploadToStorage` with auto bucket creation.
+  * `POST /api/expenses/:id/approve` & `/reject`: Chief triage endpoints updating state and firing HR emails.
+  * `POST /api/chat`: AI chat intent handler.
+* **`orchestrator.js`**: State engine managing job state transitions (`Pending` ➔ `Extracting Data` ➔ `Categorizing` ➔ `Checking Policy` ➔ `Analyzing Risk` ➔ `Approved`/`Flagged`).
+* **`emailService.js`**: Nodemailer SMTP transport bridge configured with permanent fallback credentials (`binayakrath1234@gmail.com`) to guarantee email delivery on serverless cloud containers.
+* **`pdfGenerator.js`**: Pure JS `PDFKit` engine compiling single-page executive Month-End Expense Reports.
+
+---
+
+## 🛠️ Environment Variables (`.env`)
+
+```env
+PORT=3001
+GOOGLE_CLOUD_API_KEY=your_google_gemini_api_key
+SUPABASE_URL=https://your_project.supabase.co
+SUPABASE_SERVICE_KEY=your_supabase_service_role_key
+DATABASE_URL=postgresql://postgres:pass@db.project.supabase.co:5432/postgres
+SMTP_USER=binayakrath1234@gmail.com
+SMTP_PASS=your_gmail_app_password
+```
+
+---
+
+## 💻 Running Locally
+
+```bash
+# Install Node Packages
+npm install
+
+# Run Server with Nodemon (Runs on http://localhost:3001)
+npm run dev
+```

@@ -1,33 +1,90 @@
-# ClearAudit - Frontend (Client) 🎨
+# ClearAudit — React Single Page Application (Frontend UI) 🎨⚡
 
-The frontend of ClearAudit is built with React, Tailwind CSS, and Vite. It provides two distinct, interactive dashboards for different user roles within the company.
+The **ClearAudit Frontend** is a modern, responsive Single Page Application (SPA) built with **React**, **Vite**, **Tailwind CSS**, and **Lucide Icons**. It implements role-based dashboards delivering real-time polling, interactive AI chat interfaces, and reactive accounting visualizations.
 
-## 👨‍💻 Worker Dashboard Features
+---
 
-The Worker Dashboard is designed for standard employees to easily submit and track their expenses.
+## 🏛️ Frontend Architecture & Component Topology
 
-- **AI Chat Assistant**: A conversational interface where workers can upload PDFs/images or simply type their expenses (e.g., "Audit $50 from Uber"). The AI automatically extracts the details.
-- **File Uploads**: Direct file upload support for receipts and invoices.
-- **Live Tracking**: A real-time data table displaying all submitted expenses and their live processing status (Extracting Data ➔ Categorizing ➔ Checking Policy ➔ Analyzing Risk ➔ Approved/Flagged).
-- **Personal Metrics**: A quick overview of the worker's total submitted expenses, including approved, pending, and flagged counts.
+```
+                  +-----------------------------------+
+                  |          src/App.jsx              |
+                  |  (Auth State | Route Dispatcher)  |
+                  +-----------------+-----------------+
+                                    |
+            +-----------------------+-----------------------+
+            v                                               v
++-----------------------+                       +-----------------------+
+|   Worker Dashboard    |                       |    Chief Dashboard    |
+|  (/worker | role: 2)  |                       |  (/chief | role: 1)   |
++-----------+-----------+                       +-----------+-----------+
+            |                                               |
+            +-----------------------+-----------------------+
+                                    |
+                                    v
+                  +-----------------------------------+
+                  |      src/components/Shared.jsx    |
+                  |   [AnalyticsOverview | BudgetArc] |
+                  +-----------------+-----------------+
+                                    |
+                                    v
+                  +-----------------------------------+
+                  |      src/api.js & supabase.js     |
+                  |  (Axios HTTP Client | Auth Bridge)|
+                  +-----------------------------------+
+```
 
-## 👔 Chief Dashboard Features
+---
 
-The Chief Dashboard provides administrators and finance managers with a birds-eye view of company spending.
+## 👨‍💻 1. Worker Dashboard (`/worker`)
 
-- **Company-Wide Metrics**: Real-time statistics showing the total money processed, overall company budget utilization, and the ratio of approved vs. flagged expenses.
-- **Expense Triage**: A dedicated data table where chiefs can review expenses that the AI has flagged for fraud or policy violations. Chiefs have the authority to manually **Approve** or **Reject** these items.
-- **Conversational Settings Management**: Chiefs can use the AI Chat Assistant to naturally update company policies (e.g., *"Update the monthly budget to $50000"*).
-- **One-Click Reporting**: Chiefs can ask the AI to *"Generate the monthly report"*, and the system will automatically compile all expenses into a clean PDF and email it directly.
-- **Employee Management**: A dedicated settings tab to add new employees and set individual limits.
+Designed for corporate employees to submit, attach, and track expense audits.
 
-## ⚙️ Setup & Installation
+* **Demo Account:** `worker@clearaudit.inc` | **Password:** `2`
+* **Natural Language Chat AI (`Ask ClearAudit`):** Type natural commands like *"audit $45 from Delta on 2026-06-25 for client trip"*. The AI extracts fields and launches the backend multi-agent pipeline.
+* **Drag & Drop Upload:** Multipart boundary upload handler transmitting receipt buffers safely to Supabase cloud storage.
+* **Live Pipeline Badges:** Polls `GET /dashboard/metrics` every 3 seconds to animate top row progress live (`Extracting Data` ➔ `Categorizing` ➔ `Checking Policy` ➔ `Analyzing Risk` ➔ `Approved`).
+* **Interactive Calendar Section (`CalendarSection.jsx`):** Dual status badge calendar highlighting month-to-date spending (**Green** for approved, **Amber** for flagged/pending).
+* **Receipt Attachment Action:** Upload supporting PDF receipt documents directly onto flagged rows.
 
-1. Open your terminal and navigate to this folder: `cd client`
-2. Install dependencies: `npm install`
-3. Create a `.env` file in the `client` folder:
-   ```env
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-4. Start the development server: `npm run dev` (Runs on port 5173)
+---
+
+## 👑 2. Chief Executive CFO Dashboard (`/chief`)
+
+Designed for finance executives to monitor budget burn, review fraud reasoning, and execute administrative actions.
+
+* **Demo Account:** `chief@clearaudit.inc` | **Password:** `1`
+* **Version 2.0 Accounting Precision:**
+  * **Monthly Budget Gauge (`$657 / $12,000`):** Tracks gross submitted corporate expenditure volume across all statuses.
+  * **Approved Amount Card (`$236.50`):** Strictly aggregates cleared expenditures with green `Approved` authorization.
+* **Fraud & Risk Reasoning Review:** Expand table rows to inspect exact Gemini AI fraud rationale and risk score factors on flagged transactions.
+* **Conversational Policy Control:** Message the chat assistant *"set expense limit to $150"* to update database thresholds dynamically.
+* **Instant 1-Page PDF Generation:** Type *"generate monthly expense pdf"* to trigger instant browser download of formatted executive summary sheets.
+* **1-Click Rejection to HR:** Clicking **`Reject`** (or typing *"reject Starbucks"*) updates state to *Rejected* and triggers backend Nodemailer to dispatch formal denial memos with attached receipt files directly to the HR Manager (`binayakrath1234@gmail.com`).
+
+---
+
+## 📂 Core File Directory
+
+* **`src/App.jsx`**: Main router managing authentication sessions and `/worker` vs `/chief` routing.
+* **`src/api.js`**: Axios HTTP service layer configured with Render live hosting fallback URLs and multipart boundaries.
+* **`src/supabase.js`**: Supabase authentication and storage client.
+* **`src/components/Dashboards.jsx`**: Dashboard container layouts.
+* **`src/components/Shared.jsx`**: Reusable UI cards (`AnalyticsOverview`), animated SVG gauges (`BudgetMeter`), and transaction directory (`DataTable`).
+* **`src/components/CalendarSection.jsx`**: Monthly calendar grid component.
+* **`vercel.json`**: Vercel SPA routing rewrite rules (`/(.*) -> /index.html`) eliminating 404 navigation errors.
+
+---
+
+## 🛠️ Local Development
+
+```bash
+# Install Dependencies
+npm install
+
+# Start Vite Dev Server (Runs on http://localhost:5173)
+npm run dev
+
+# Build Production Bundle
+npm run build
+```
