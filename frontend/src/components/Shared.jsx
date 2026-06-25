@@ -464,41 +464,59 @@ export const BudgetMeter = ({ totalAmount, monthlyBudget }) => {
   );
 };
 
-export const AnalyticsOverview = ({ metrics }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6 mb-8">
-    <div className="xl:col-span-2">
-      <BudgetMeter totalAmount={metrics.totalAmountProcessed} monthlyBudget={metrics.monthlyBudget} />
-    </div>
-    <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
-      <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 dark:bg-blue-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-      <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Total Expenses</h3>
-      <p className="text-3xl font-black text-gray-900 dark:text-gray-100 relative z-10 tracking-tight">{metrics.totalExpenses || 0}</p>
-    </div>
-    <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
-      <div className="absolute -right-4 -top-4 w-24 h-24 bg-green-50 dark:bg-green-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-      <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Approved Amount</h3>
-      <p className="text-3xl font-black text-gray-900 dark:text-gray-100 relative z-10 tracking-tight">${metrics.totalAmountProcessed || '0.00'}</p>
-    </div>
-    <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
-      <div className="absolute -right-4 -top-4 w-24 h-24 bg-yellow-50 dark:bg-yellow-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-      <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Needs Attention</h3>
-      <div className="flex items-center gap-3 relative z-10">
-        <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{metrics.flagged || 0}</p>
-        {(metrics.flagged > 0) && <span className="bg-yellow-100 text-yellow-700 text-xs px-2.5 py-1 rounded-md font-bold shadow-sm dark:shadow-slate-900/50 animate-pulse">Flags</span>}
+export const AnalyticsOverview = ({ metrics = {} }) => {
+  let totalAmount = typeof metrics.totalAmountProcessed === 'number' ? metrics.totalAmountProcessed : parseFloat(metrics.totalAmountProcessed) || 0;
+  let approvedAmt = typeof metrics.approvedAmount === 'number' ? metrics.approvedAmount : parseFloat(metrics.approvedAmount) || 0;
+
+  if (!totalAmount && metrics.allJobs) {
+    metrics.allJobs.forEach(j => {
+      if (j.status !== 'Rejected' && j.extractedData?.amount) {
+        const amt = typeof j.extractedData.amount === 'number' ? j.extractedData.amount : parseFloat(String(j.extractedData.amount).replace(/[^0-9.-]+/g, '')) || 0;
+        totalAmount += amt;
+        if (j.status === 'Approved') {
+          approvedAmt += amt;
+        }
+      }
+    });
+  }
+  if (!approvedAmt && totalAmount > 0) approvedAmt = totalAmount;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6 mb-8">
+      <div className="xl:col-span-2">
+        <BudgetMeter totalAmount={totalAmount} monthlyBudget={metrics.monthlyBudget} />
+      </div>
+      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 dark:bg-blue-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Total Expenses</h3>
+        <p className="text-3xl font-black text-gray-900 dark:text-gray-100 relative z-10 tracking-tight">{metrics.totalExpenses || 0}</p>
+      </div>
+      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-green-50 dark:bg-green-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Approved Amount</h3>
+        <p className="text-3xl font-black text-gray-900 dark:text-gray-100 relative z-10 tracking-tight">${approvedAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+      </div>
+      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-yellow-50 dark:bg-yellow-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Needs Attention</h3>
+        <div className="flex items-center gap-3 relative z-10">
+          <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{metrics.flagged || 0}</p>
+          {(metrics.flagged > 0) && <span className="bg-yellow-100 text-yellow-700 text-xs px-2.5 py-1 rounded-md font-bold shadow-sm dark:shadow-slate-900/50 animate-pulse">Flags</span>}
+        </div>
+      </div>
+      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-red-50 dark:bg-red-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Rejected</h3>
+        <p className="text-3xl font-black text-gray-900 dark:text-gray-100 relative z-10 tracking-tight">{metrics.rejected || 0}</p>
+      </div>
+      <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-purple-50 dark:bg-purple-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
+        <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Processing</h3>
+        <p className="text-3xl font-black text-gray-900 dark:text-gray-100 relative z-10 tracking-tight">{metrics.processing || 0}</p>
       </div>
     </div>
-    <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
-      <div className="absolute -right-4 -top-4 w-24 h-24 bg-red-50 dark:bg-red-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-      <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Rejected</h3>
-      <p className="text-3xl font-black text-gray-900 dark:text-gray-100 relative z-10 tracking-tight">{metrics.rejected || 0}</p>
-    </div>
-    <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm dark:shadow-slate-900/50 hover:shadow-md transition-shadow relative overflow-hidden group">
-      <div className="absolute -right-4 -top-4 w-24 h-24 bg-purple-50 dark:bg-purple-900/30 rounded-full opacity-50 group-hover:scale-110 transition-transform"></div>
-      <h3 className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2 relative z-10">Processing</h3>
-      <p className="text-3xl font-black text-gray-900 dark:text-gray-100 relative z-10 tracking-tight">{metrics.processing || 0}</p>
-    </div>
-  </div>
-);
+  );
+};
 
 export const DataTable = ({ jobs, role, refreshData }) => {
   const [uploadingId, setUploadingId] = useState(null);

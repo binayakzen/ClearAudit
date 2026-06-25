@@ -96,9 +96,14 @@ router.get('/dashboard/metrics', async (req, res) => {
         const processing = jobs.filter(j => ['Pending', 'Extracting Data', 'Categorizing', 'Checking Policy', 'Analyzing Risk'].includes(j.status)).length;
         
         let totalAmountProcessed = 0;
+        let approvedAmount = 0;
         jobs.forEach(j => {
-            if (j.extractedData && j.extractedData.amount) {
-                totalAmountProcessed += j.extractedData.amount;
+            if (j.status !== 'Rejected' && j.extractedData && j.extractedData.amount) {
+                const amt = typeof j.extractedData.amount === 'number' ? j.extractedData.amount : parseFloat(String(j.extractedData.amount).replace(/[^0-9.-]+/g, '')) || 0;
+                totalAmountProcessed += amt;
+                if (j.status === 'Approved') {
+                    approvedAmount += amt;
+                }
             }
         });
 
@@ -109,6 +114,8 @@ router.get('/dashboard/metrics', async (req, res) => {
             flagged,
             rejected,
             processing,
+            totalAmountProcessed,
+            approvedAmount,
             monthlyBudget: monthlyBudget,
             recentJobs: jobs.slice(0, 10), // return top 10 recent
             allJobs: jobs
