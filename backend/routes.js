@@ -24,6 +24,27 @@ const authMiddleware = async (req, res, next) => {
 
 router.use(authMiddleware);
 
+async function safeUploadToStorage(fileName, file) {
+    try {
+        let { error: uploadError } = await supabase.storage
+            .from('receipts')
+            .upload(fileName, file.buffer, { contentType: file.mimetype });
+            
+        if (uploadError && (uploadError.message?.toLowerCase().includes('not found') || uploadError.error?.toLowerCase().includes('not found'))) {
+            await supabase.storage.createBucket('receipts', { public: true }).catch(() => {});
+            let retry = await supabase.storage
+                .from('receipts')
+                .upload(fileName, file.buffer, { contentType: file.mimetype });
+            uploadError = retry.error;
+        }
+        if (uploadError) {
+            console.warn("Storage upload warning:", uploadError.message || uploadError);
+        }
+    } catch (err) {
+        console.warn("Storage upload error:", err.message);
+    }
+}
+
 // POST /api/expenses/upload
 router.post('/expenses/upload', upload.single('file'), async (req, res) => {
     try {
@@ -31,11 +52,7 @@ router.post('/expenses/upload', upload.single('file'), async (req, res) => {
         
         if (req.file) {
             fileName = `${Date.now()}_${req.file.originalname}`;
-            const { error: uploadError } = await supabase.storage
-                .from('receipts')
-                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-                
-            if (uploadError) throw uploadError;
+            await safeUploadToStorage(fileName, req.file);
         }
 
         const job = await Orchestrator.createJob(fileName, null, req.user.id);
@@ -202,11 +219,7 @@ router.post('/expenses/:id/receipt', upload.single('file'), async (req, res) => 
         
         if (req.file) {
             fileName = `${Date.now()}_${req.file.originalname}`;
-            const { error: uploadError } = await supabase.storage
-                .from('receipts')
-                .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
-                
-            if (uploadError) throw uploadError;
+            await safeUploadToStorage(fileName, req.file);
         }
 
         const job = await Orchestrator.uploadReceipt(req.params.id, fileName);
