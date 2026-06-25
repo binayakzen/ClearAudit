@@ -98,7 +98,7 @@ router.get('/dashboard/metrics', async (req, res) => {
         let totalAmountProcessed = 0;
         let approvedAmount = 0;
         jobs.forEach(j => {
-            if (j.status !== 'Rejected' && j.extractedData && j.extractedData.amount) {
+            if (j.extractedData && j.extractedData.amount) {
                 const amt = typeof j.extractedData.amount === 'number' ? j.extractedData.amount : parseFloat(String(j.extractedData.amount).replace(/[^0-9.-]+/g, '')) || 0;
                 totalAmountProcessed += amt;
                 if (j.status === 'Approved') {

@@ -468,18 +468,21 @@ export const AnalyticsOverview = ({ metrics = {} }) => {
   let totalAmount = typeof metrics.totalAmountProcessed === 'number' ? metrics.totalAmountProcessed : parseFloat(metrics.totalAmountProcessed) || 0;
   let approvedAmt = typeof metrics.approvedAmount === 'number' ? metrics.approvedAmount : parseFloat(metrics.approvedAmount) || 0;
 
-  if (!totalAmount && metrics.allJobs) {
+  if ((!totalAmount || !approvedAmt) && metrics.allJobs) {
+    let sumTotal = 0;
+    let sumApproved = 0;
     metrics.allJobs.forEach(j => {
-      if (j.status !== 'Rejected' && j.extractedData?.amount) {
+      if (j.extractedData?.amount) {
         const amt = typeof j.extractedData.amount === 'number' ? j.extractedData.amount : parseFloat(String(j.extractedData.amount).replace(/[^0-9.-]+/g, '')) || 0;
-        totalAmount += amt;
+        sumTotal += amt;
         if (j.status === 'Approved') {
-          approvedAmt += amt;
+          sumApproved += amt;
         }
       }
     });
+    if (!totalAmount) totalAmount = sumTotal;
+    if (!approvedAmt) approvedAmt = sumApproved;
   }
-  if (!approvedAmt && totalAmount > 0) approvedAmt = totalAmount;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6 mb-8">
