@@ -165,6 +165,18 @@ router.post('/chat', async (req, res) => {
                 reply = `I have successfully updated the company-wide expense limit to $${newLimit}. Any future expenses exceeding this amount will be flagged for your review.`;
                 return res.json({ reply });
             }
+
+            const rejectMatch = lowerMsg.match(/(?:reject|deny|refuse|disapprove)[\s\w]*?(?:claim|audit|job|expense|exception|ride|charge|request|#?\w*)/);
+            if (rejectMatch) {
+                const jobs = await Orchestrator.getAllJobs();
+                const flaggedJob = jobs.find(j => j.status === 'Flagged') || jobs[0];
+                if (flaggedJob) {
+                    await Orchestrator.rejectJob(flaggedJob.id);
+                    await sendRejectionEmail(flaggedJob);
+                }
+                reply = "I have formally rejected the flagged expense claim and automatically dispatched an official denial notice email with the attached documentation to the HR manager.";
+                return res.json({ reply });
+            }
         }
         
         if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
