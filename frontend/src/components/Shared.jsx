@@ -491,7 +491,8 @@ export const DataTable = ({ jobs, role, refreshData }) => {
       await api.uploadReceipt(jobId, file);
       refreshData();
     } catch (e) {
-      alert("Failed to upload receipt");
+      console.error("Upload receipt error:", e);
+      alert(e?.response?.data?.error || e.message || "Failed to upload receipt");
     } finally {
       setUploadingId(null);
     }
@@ -502,7 +503,8 @@ export const DataTable = ({ jobs, role, refreshData }) => {
       await api.approveJob(jobId);
       refreshData();
     } catch (e) {
-      alert("Failed to approve");
+      console.error("Approve error:", e);
+      alert(e?.response?.data?.error || e.message || "Failed to approve");
     }
   };
 
@@ -511,7 +513,8 @@ export const DataTable = ({ jobs, role, refreshData }) => {
       await api.rejectJob(jobId);
       refreshData();
     } catch (e) {
-      alert("Failed to reject");
+      console.error("Reject error:", e);
+      alert(e?.response?.data?.error || e.message || "Failed to reject");
     }
   };
 

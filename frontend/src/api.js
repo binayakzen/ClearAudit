@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { supabase } from './supabase';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://clearaudit.onrender.com/api';
 
 const apiInstance = axios.create({ baseURL: API_BASE });
 
@@ -17,9 +17,7 @@ export const uploadExpense = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('fileName', file.name);
-  const response = await apiInstance.post(`/expenses/upload`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await apiInstance.post(`/expenses/upload`, formData);
   return response.data;
 };
 
@@ -43,9 +41,7 @@ export const uploadReceipt = async (jobId, file) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('fileName', file.name);
-  const response = await apiInstance.post(`/expenses/${jobId}/receipt`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const response = await apiInstance.post(`/expenses/${jobId}/receipt`, formData);
   return response.data;
 };
 
@@ -68,4 +64,5 @@ export const addEmployee = async (email, limit) => {
   const response = await apiInstance.post(`/employees`, { email, limit });
   return response.data;
 };
+
 
